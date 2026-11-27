@@ -25,7 +25,7 @@ def get_client():
 
 @st.cache_data
 def load_bench():
-    d = np.load("router_features_v2.npz", allow_pickle=True)
+    d = np.load("data/router_features_v2.npz", allow_pickle=True)
     tiers = [str(t) for t in d["tiers"]]
     S, L = tiers.index("small"), tiers.index("large")
     c = d["correct"]

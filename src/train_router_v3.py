@@ -1,6 +1,8 @@
 import csv
 import numpy as np
-from sklearn.model_selection import StratifiedKFold, cross_val_predict
+from sklearn.model_selection import StratifiedKFold, KFold, cross_val_predict
+from sklearn.linear_model import Ridge
+from sklearn.metrics import roc_auc_score, r2_score
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.neighbors import KNeighborsClassifier
@@ -8,12 +10,19 @@ from sklearn.linear_model import LogisticRegression
 from xgboost import XGBClassifier
 
 SEED = 42
-d = np.load("router_features_v2.npz", allow_pickle=True)
+d = np.load("data/router_features_v2.npz", allow_pickle=True)
 X, correct, cost, srcs = d["X"], d["correct"], d["cost"], d["sources"]
 tiers = [str(t) for t in d["tiers"]]
 n, T = correct.shape
 idx = np.arange(n)
 mean_cost = cost.mean(axis=0)  # expected cost per question for each model
+C_hat = np.column_stack([
+    np.exp(cross_val_predict(make_pipeline(StandardScaler(), Ridge(alpha=100)), X, np.log(cost[:, k]),
+                             cv=KFold(5, shuffle=True, random_state=SEED)))
+    for k in range(T)
+])
+for k, t in enumerate(tiers):
+    print(f"cost predictor {t:8s} R2 on log-cost = {r2_score(np.log(cost[:, k]), np.log(C_hat[:, k])):.3f}")
 large_k = tiers.index("large")
 acc_large = correct[:, large_k].mean()
 cost_large = cost[:, large_k].sum()
@@ -40,12 +49,14 @@ for name, make in routers.items():
         cross_val_predict(make(), X, correct[:, k], cv=skf, method="predict_proba")[:, 1]
         for k in range(T)
     ])
+    print(f"\n[{name}] correctness AUC: " + "  ".join(
+        f"{t}={roc_auc_score(correct[:, k], P[:, k]):.3f}" for k, t in enumerate(tiers)))
     sweep = []
     for lam in lams:
-        ch = (P - lam * mean_cost[None, :]).argmax(axis=1)
+        ch = (P - lam * C_hat).argmax(axis=1)
         sweep.append((lam, correct[idx, ch].mean(), cost[idx, ch].sum(), ch))
 
-    with open(f"sweep_v2_{name}.csv", "w", newline="") as f:
+    with open(f"results/sweeps/sweep_v3_{name}.csv", "w", newline="") as f:
         w = csv.writer(f)
         w.writerow(["lambda", "acc", "cost"] + [f"frac_{t}" for t in tiers])
         for lam, acc, c, ch in sweep:

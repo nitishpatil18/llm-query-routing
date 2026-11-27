@@ -2,12 +2,12 @@ import json
 import numpy as np
 from sentence_transformers import SentenceTransformer
 
-with open("benchmark_slice.json") as f:
+with open("review1/benchmark_slice.json") as f:
     bench = {r["id"]: r for r in json.load(f)}
 
 small_correct = {}
 large_correct = {}
-with open("run_results.jsonl") as f:
+with open("review1/run_results.jsonl") as f:
     for line in f:
         r = json.loads(line)
         if "error" in r:
@@ -28,6 +28,6 @@ print(f"usable rows: {len(ids)}")
 model = SentenceTransformer("all-MiniLM-L6-v2")
 X = model.encode(questions, show_progress_bar=True)
 
-np.savez("router_features.npz", X=X, y_small=y_small, y_large=y_large,
+np.savez("review1/router_features.npz", X=X, y_small=y_small, y_large=y_large,
          ids=np.array(ids), sources=np.array(sources))
-print("saved router_features.npz, X shape:", X.shape)
+print("saved review1/router_features.npz, X shape:", X.shape)

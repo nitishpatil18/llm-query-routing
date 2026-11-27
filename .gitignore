@@ -6,3 +6,6 @@ __pycache__/
 log_*.txt
 nohup.out
 run_results_backup.jsonl
+logs/
+results/cascade_model.joblib
+results/cascade_oof.npz

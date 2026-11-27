@@ -3,7 +3,7 @@ from sklearn.model_selection import StratifiedKFold, cross_val_predict
 from xgboost import XGBClassifier
 from scipy.stats import chi2
 
-data = np.load("router_features.npz", allow_pickle=True)
+data = np.load("review1/router_features.npz", allow_pickle=True)
 X = data["X"]
 y_small = data["y_small"].astype(int)
 y_large = data["y_large"].astype(int)

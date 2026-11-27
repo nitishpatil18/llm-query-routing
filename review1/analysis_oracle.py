@@ -9,7 +9,7 @@ PRICE = {  # (prompt, completion) USD per token, from Groq /models
 tiers = list(PRICE)
 rec = defaultdict(dict)
 src = {}
-with open("run_results.jsonl") as f:
+with open("review1/run_results.jsonl") as f:
     for line in f:
         r = json.loads(line)
         if "error" in r:

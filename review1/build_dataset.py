@@ -36,7 +36,7 @@ for i in gsm8k_idx:
         "answer": final_answer,
     })
 
-with open("benchmark_slice.json", "w") as f:
+with open("review1/benchmark_slice.json", "w") as f:
     json.dump(rows, f, indent=2)
 
 print(f"total rows: {len(rows)}")

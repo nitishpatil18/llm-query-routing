@@ -11,11 +11,11 @@ PRICE = {
     "large": {"prompt": 0.00000015, "completion": 0.0000006},
 }
 
-data = np.load("router_features.npz", allow_pickle=True)
+data = np.load("review1/router_features.npz", allow_pickle=True)
 X, y_small, y_large, ids = data["X"], data["y_small"], data["y_large"], data["ids"]
 
 tok = {"small": {}, "large": {}}
-with open("run_results.jsonl") as f:
+with open("review1/run_results.jsonl") as f:
     for line in f:
         r = json.loads(line)
         if "error" in r:
@@ -82,10 +82,10 @@ for name, clf in models.items():
 import csv
 proba_xgb = cross_val_predict(models["xgboost"], X, y_small, cv=skf, method="predict_proba")[:, 1]
 sweep = evaluate_router(proba_xgb)
-with open("sweep_xgboost.csv", "w", newline="") as f:
+with open("review1/sweep_xgboost.csv", "w", newline="") as f:
     w = csv.writer(f)
     w.writerow(["threshold", "accuracy", "cost"])
     for t, acc, cost in sweep:
         if round(t, 2) % 0.05 == 0:
             w.writerow([round(t,2), round(acc,4), round(cost,6)])
-print(open("sweep_xgboost.csv").read())
+print(open("review1/sweep_xgboost.csv").read())

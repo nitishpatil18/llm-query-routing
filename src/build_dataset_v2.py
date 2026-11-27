@@ -7,7 +7,7 @@ N_MMLUPRO = 200
 N_MATH = 150
 rng = random.Random(SEED)
 
-with open("benchmark_slice.json") as f:
+with open("review1/benchmark_slice.json") as f:
     old = json.load(f)
 
 mp = load_dataset("TIGER-Lab/MMLU-Pro", split="test")

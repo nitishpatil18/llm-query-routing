@@ -1,7 +1,7 @@
 import numpy as np
 
 SEED = 42
-d = np.load("router_features_v2.npz", allow_pickle=True)
+d = np.load("data/router_features_v2.npz", allow_pickle=True)
 correct, cost, ctok = d["correct"], d["cost"], d["ctok"]
 tiers = [str(t) for t in d["tiers"]]
 S, L = tiers.index("small"), tiers.index("large")

@@ -3,7 +3,7 @@ from sklearn.model_selection import StratifiedKFold, cross_val_predict
 from xgboost import XGBClassifier
 
 SEED = 42
-d = np.load("router_features_v2.npz", allow_pickle=True)
+d = np.load("data/router_features_v2.npz", allow_pickle=True)
 correct, cost, ctok = d["correct"], d["cost"], d["ctok"]
 tiers = [str(t) for t in d["tiers"]]
 S, L = tiers.index("small"), tiers.index("large")
@@ -18,8 +18,8 @@ def make():
 skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=SEED)
 p = cross_val_predict(make(), x, cs, cv=skf, method="predict_proba")[:, 1]
 model = make().fit(x, cs)
-joblib.dump(model, "cascade_model.joblib")
-np.savez("cascade_oof.npz", p=p, cs=cs, cl=cl, ps=cost[:, S], pl=cost[:, L])
+joblib.dump(model, "results/cascade_model.joblib")
+np.savez("results/cascade_oof.npz", p=p, cs=cs, cl=cl, ps=cost[:, S], pl=cost[:, L])
 print(f"rows={len(x)} small acc={cs.mean():.3f} large acc={cl.mean():.3f}")
 for t in [100, 300, 1000, 2000, 4096]:
     print(f"small used {t:>4} completion tokens -> P(small correct) = {model.predict_proba(np.log1p([[t]]))[0, 1]:.2f}")

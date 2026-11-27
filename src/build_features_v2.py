@@ -37,7 +37,7 @@ cost = np.array([[rec[i][t][1] for t in TIERS] for i in ids])
 ctok = np.array([[rec[i][t][2] for t in TIERS] for i in ids])
 sources = np.array([rows[i]["source"] for i in ids])
 
-np.savez("router_features_v2.npz", X=X, correct=correct, cost=cost, ctok=ctok,
+np.savez("data/router_features_v2.npz", X=X, correct=correct, cost=cost, ctok=ctok,
          ids=np.array(ids), sources=sources, tiers=np.array(TIERS))
 
 print("X shape:", X.shape)

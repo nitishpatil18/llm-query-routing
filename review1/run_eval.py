@@ -5,11 +5,11 @@ from groq import Groq
 load_dotenv()
 client = Groq(api_key=os.environ["GROQ_API_KEY"])
 
-with open("benchmark_slice.json") as f:
+with open("review1/benchmark_slice.json") as f:
     rows = json.load(f)
 
 MODELS = {"small": "openai/gpt-oss-20b", "large": "openai/gpt-oss-120b", "premium": "qwen/qwen3.8-27b"}
-OUT = "run_results.jsonl"
+OUT = "review1/run_results.jsonl"
 
 def build_prompt(row):
     if row["source"] == "mmlu":
