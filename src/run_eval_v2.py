@@ -7,13 +7,13 @@ load_dotenv()
 client = Groq(api_key=os.environ["GROQ_API_KEY"])
 
 MODELS = {"small": "openai/gpt-oss-20b", "large": "openai/gpt-oss-120b", "premium": "qwen/qwen3.8-27b"}
-OUT = "run_results_v2.jsonl"
+OUT = "results/run_results_v2.jsonl"
 TIERS = sys.argv[1:] or list(MODELS)
 MAX_TOKENS = 4096
 SLEEP = 2.2
 LETTERS = "ABCDEFGHIJ"
 
-with open("benchmark_v2.json") as f:
+with open("data/benchmark_v2.json") as f:
     rows = json.load(f)
 random.Random(7).shuffle(rows)
 by_id = {r["id"]: r for r in rows}

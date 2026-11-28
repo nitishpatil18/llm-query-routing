@@ -32,7 +32,7 @@ for i in rng.sample(numeric, N_MATH):
 
 rows = old + new_mp + new_math
 assert len(set(r["id"] for r in rows)) == len(rows), "duplicate ids"
-with open("benchmark_v2.json", "w") as f:
+with open("data/benchmark_v2.json", "w") as f:
     json.dump(rows, f)
 
 print("total rows:", len(rows))

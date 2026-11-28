@@ -17,7 +17,7 @@ load_dotenv(".env")
 MODELS = {"small": "openai/gpt-oss-20b", "large": "openai/gpt-oss-120b", "premium": "qwen/qwen3.8-27b"}
 MAX_TOKENS = 4096
 SLEEP = 2.2
-OUT = "run_results_code.jsonl"
+OUT = "results/run_results_code.jsonl"
 FENCE = "`" * 3
 
 limit = None

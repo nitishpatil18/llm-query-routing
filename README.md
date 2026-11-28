@@ -72,13 +72,10 @@ Two tabs. "Live cascade": the small model answers, and the app escalates to the 
 ## Layout
 
     app.py            Streamlit demo
-    src/              pipeline and analysis scripts (run from the project root)
-    data/             router_features_v2.npz, dev_ids.json (frozen development set)
-    results/          sweep outputs
+    src/              pipeline, evaluation runners and analysis scripts (run from the project root)
+    data/             benchmark_v2.json, router_features_v2.npz, dev_ids.json (frozen development set)
+    results/          raw model results (run_results_*.jsonl), sweep outputs
     review1/          first-review scripts, data and results (2 tiers, 160 questions)
-    run_eval_v2.py    label every question with every model (resumable)
-    run_eval_code.py  HumanEval benchmark with sandboxed test execution
-    benchmark_v2.json, run_results_v2.jsonl, run_results_code.jsonl   benchmark and raw results
 
 ## Reproduce
 
@@ -86,14 +83,14 @@ Two tabs. "Live cascade": the small model answers, and the app escalates to the 
     pip install -r requirements.txt
     echo "GROQ_API_KEY=your_key" > .env
     python3 src/build_dataset_v2.py
-    python3 run_eval_v2.py small        # also: large, premium
+    python3 src/run_eval_v2.py small        # also: large, premium
     python3 src/build_features_v2.py
     python3 src/compare_policies.py     # nested threshold selection + bootstrap vs random mix
     python3 src/price_sensitivity.py
     python3 src/truncation_rule.py
     python3 src/final_eval.py           # held-out validation on rows outside data/dev_ids.json
     python3 src/check_harness.py        # grader check: canonical solutions must pass
-    python3 run_eval_code.py small      # HumanEval; also: large, premium
+    python3 src/run_eval_code.py small      # HumanEval; also: large, premium
 
 ## Limitations
 

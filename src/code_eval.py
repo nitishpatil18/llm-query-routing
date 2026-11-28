@@ -7,7 +7,7 @@ PRICE = {"small": (0.000000075, 0.0000003), "large": (0.00000015, 0.0000006), "p
 SEED = 42
 
 last = {}
-for line in open("run_results_code.jsonl"):
+for line in open("results/run_results_code.jsonl"):
     try:
         r = json.loads(line)
     except Exception:

@@ -10,11 +10,11 @@ PRICE = {  # (prompt, completion) USD per token, from Groq /models
 }
 TIERS = list(PRICE)
 
-with open("benchmark_v2.json") as f:
+with open("data/benchmark_v2.json") as f:
     rows = {r["id"]: r for r in json.load(f)}
 
 latest = {}
-with open("run_results_v2.jsonl") as f:
+with open("results/run_results_v2.jsonl") as f:
     for line in f:
         r = json.loads(line)
         latest[(r["id"], r["tier"])] = r  # last record wins, same as run_eval_v2
