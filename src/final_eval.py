@@ -49,7 +49,7 @@ def report(mask, label):
     print(f"McNemar cascade vs small: cascade-only right={x} small-only right={y} p={p:.4f}")
     x, y, p = mcnemar(acc_i, cl)
     print(f"McNemar cascade vs large: cascade-only right={x} large-only right={y} p={p:.4f}")
-    for m in [1, 2, 3, 4, 8, 16]:
+    for m in [1, 1.25, 1.5, 1.75, 2, 3, 4, 8, 16]:
         pm = pl * m
         cost_i = ps + np.where(trunc, pm, 0.0)
         rng = np.random.default_rng(SEED)

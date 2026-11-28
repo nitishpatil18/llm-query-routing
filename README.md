@@ -2,7 +2,7 @@
 
 When does it pay to route a query to a cheaper LLM, and what signal should drive that decision? This project measures it end to end on real model calls (nothing simulated or estimated): three Groq-hosted models, four benchmarks, real per-token prices, and a statistical comparison against the right baseline, which is randomly mixing the cheap and the expensive model.
 
-**Status:** the development-set analysis is complete. Held-out validation (the remaining benchmark questions) and a HumanEval code benchmark are still running. Their results will be added here when they finish.
+**Status:** the main benchmark is complete (510 questions x 3 models) and the held-out validation is done. A HumanEval code benchmark is finishing, and its results will be added here.
 
 ## Model pool and benchmark
 
@@ -16,32 +16,40 @@ When does it pay to route a query to a cheaper LLM, and what signal should drive
 - Every question is answered by every model, scored programmatically. Cost is computed from the token counts the API returns.
 - Each call is capped at 4096 completion tokens. A truncated answer counts as wrong, and truncation rates are reported.
 
-## Findings (development set: 342 questions = 80 MMLU, 80 GSM8K, 100 MMLU-Pro, 82 MATH)
+## Findings (510 questions: 80 MMLU, 80 GSM8K, 200 MMLU-Pro, 150 MATH)
 
 | policy | accuracy | cost |
 |---|---|---|
-| always-small | 0.833 | $0.0870 |
-| always-large | 0.895 | $0.1118 |
-| always-premium | 0.836 | $0.5231 |
-| oracle (any of the 3 correct) | 0.950 | - |
+| always-small | 0.827 | $0.1321 |
+| always-large | 0.886 | $0.1740 |
+| always-premium | 0.812 | $0.7800 |
+| oracle (any of the 3 correct) | 0.939 | - |
 
-1. **A learned pre-call router does not help.** Correctness predictors on MiniLM question embeddings reach AUC 0.55 for the small model (0.5 is chance). With the decision threshold chosen on training folds only, these routers are indistinguishable from, or worse than, randomly mixing small and large at the same accuracy.
-2. **Large's advantage is mostly finishing.** 20 of 342 small answers (5.8%) hit the 4096-token cap (MATH 7/82, MMLU-Pro 13/100, none on MMLU or GSM8K). Small is 0% correct on those, large is 85%. On answers that finished, small is 88.5% and large 89.8%.
-3. **A one-line rule captures it:** escalate to large only if small hits the cap. Accuracy 0.883, which is 98.7% of always-large. Paired test vs always-large: 10 vs 14 discordant questions, McNemar p = 0.54.
-4. **Whether it saves money depends on the price gap.** At real prices large costs only 1.3x small per question here, and the saving (3.5%) is not distinguishable from mixing. If the large model were pricier (hypothetical multiplier on large's price, with measured tokens and accuracy unchanged):
+1. **A learned router does not robustly beat random mixing at real prices.** Correctness predictors on MiniLM question embeddings reach AUC 0.64 for the small model (0.5 is chance). Adding the small model's own output length gives 0.70 alone and 0.81 combined with the embedding. With the decision threshold chosen on training folds only, none of these policies beats randomly mixing small and large at the same accuracy: five of the six 95%/98%-target comparisons have confidence intervals that include zero, and the sixth (embedding + length cascade at the 95% target: +3.6 points of large cost, CI [+0.2, +10.5]) is not robust to multiple comparisons.
+2. **Large's advantage is mostly finishing.** 31 of 510 small answers (6.1%) hit the 4096-token cap (MATH 12/150, MMLU-Pro 19/200, none on MMLU or GSM8K). Small is 0% correct on those, large is 84%. On answers that finished, small is 0.881 and large 0.889.
+3. **A one-line rule captures it:** escalate to large only if small hits the cap. Accuracy 0.878, which is 99.1% of always-large (paired test vs always-large: 14 vs 18 discordant questions, McNemar p = 0.60).
+4. **Whether it saves money depends on how much costlier the large model is.** The ratio below is the measured cost of large over small on this benchmark. Large's per-token price is 2x small's, but it spends fewer reasoning tokens, so the realized ratio at real prices is 1.3x. Other rows scale large's price (hypothetical; accuracy and token counts stay measured):
 
-| large price | large/small cost ratio | saved vs always-large | vs random mix at same accuracy (pts of large cost, 95% CI) |
-|---|---|---|---|
-| x1 (real) | 1.3x | 3.5% | -0.8 [-12.5, +12.8] |
-| x2 | 2.6x | 42.4% | +30.4 [+12.7, +49.2] |
-| x4 | 5.1x | 61.8% | +46.4 [+23.4, +68.2] |
-| x16 | 20.6x | 76.4% | +58.2 [+31.0, +82.4] |
+| large/small cost ratio | saved vs always-large | vs random mix at same accuracy (pts of large cost, 95% CI) |
+|---|---|---|
+| 1.3x (real) | 3.6% | +0.0 [-9.4, +11.0] |
+| 1.6x | 18.8% | +13.3 [+1.6, +25.3] |
+| 2.0x | 28.9% | +22.1 [+8.5, +34.9] |
+| 2.6x | 41.5% | +33.1 [+16.7, +47.0] |
+| 5.3x | 60.5% | +49.4 [+28.6, +65.6] |
+| 21.1x | 74.8% | +61.8 [+37.2, +79.6] |
 
-5. **Why:** a cascade pays for the small call on every question, so it beats mixing only if it escalates fewer than (1 - cost_small / cost_large) as many questions as mixing needs for the same accuracy. That is easy when the big model is several times costlier and hard when it is 1.3x.
+   The rule is neutral at the real 1.3x ratio and significantly better than mixing from about 1.6x.
+5. **Why:** a cascade pays for the small call on every question, so it beats mixing only if it escalates fewer than (1 - cost_small / cost_large) as many questions as mixing needs for the same accuracy. That is easy when the big model is clearly costlier and hard when it is barely costlier.
+
+### Held-out validation
+
+The rule was frozen in git (commit e1ca13d) after the first 342 questions were labelled and before the remaining 168 were. On those 168 (MATH 68, MMLU-Pro 100; no MMLU or GSM8K rows, since all of those were in the first 342): always-small 0.815, always-large 0.869, cascade 0.869 (4 vs 4 discordant questions, p = 1.0). 11 small answers (6.5%) hit the cap; small got none right, large 82%. Versus random mixing: +1.1 [-14.9, +17.5] at the real cost ratio (1.4x on this subset), +34.9 [+11.2, +52.1] at 2.8x, +65.4 [+29.8, +82.8] at 22.1x. The pattern matches the development set.
 
 Honesty notes:
-- The cap rule was found by inspecting the development set (a learned token-count model turned out to learn mostly "hit the cap"). The rule was frozen in git (commit e1ca13d) before the remaining questions finished. Those remaining questions are the held-out test.
+- The cap rule was found by inspecting the development set (a learned token-count model turned out to learn mostly "hit the cap"), then frozen and tested on unseen questions.
 - Price multipliers are hypothetical. Accuracy and token counts are measured.
+- The held-out subset contains only MATH and MMLU-Pro, so its truncation rate is higher than the full set's.
 
 ## Demo
 
