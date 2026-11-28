@@ -2,7 +2,7 @@
 
 When does it pay to route a query to a cheaper LLM, and what signal should drive that decision? This project measures it end to end on real model calls (nothing simulated or estimated): three Groq-hosted models, four benchmarks, real per-token prices, and a statistical comparison against the right baseline, which is randomly mixing the cheap and the expensive model.
 
-**Status:** the main benchmark is complete (510 questions x 3 models) and the held-out validation is done. A HumanEval code benchmark is finishing, and its results will be added here.
+**Status:** complete. Main benchmark (510 questions x 3 models), held-out validation, and HumanEval (164 problems x 3 models) are all done.
 
 ## Model pool and benchmark
 
@@ -51,6 +51,18 @@ Honesty notes:
 - Price multipliers are hypothetical. Accuracy and token counts are measured.
 - The held-out subset contains only MATH and MMLU-Pro, so its truncation rate is higher than the full set's.
 
+### Code (HumanEval, 164 problems, all three tiers)
+
+| tier | pass | truncated | mean completion tokens | cost |
+|---|---|---|---|---|
+| small | 0.988 (162/164) | 2 | 647 | $0.0347 |
+| large | 0.988 (162/164) | 0 | 483 | $0.0533 |
+| premium | 0.957 (157/164) | 0 | 211 | $0.1625 |
+
+Small and large pass exactly the same 162 problems; the other two fail on every model (oracle = 162/164). With no accuracy gap there is nothing for a router to exploit: always-small is about 35% cheaper than always-large at identical accuracy, and the cap rule saves 30.5% because it pays for two escalations that do not help. Routing needs both a price gap and an accuracy gap. On MATH and MMLU-Pro the accuracy gap comes almost entirely from truncation; on HumanEval there is none.
+
+Generated code runs against the official tests in a locked-down subprocess. The grader was checked by running all 164 canonical solutions (all pass) plus two negative controls (src/check_harness.py). These runs happened after the rule was frozen.
+
 ## Demo
 
     streamlit run app.py
@@ -90,3 +102,4 @@ Two tabs. "Live cascade": the small model answers, and the app escalates to the 
 - 342 development questions give wide confidence intervals.
 - Models run on Groq's free tier, which has shared daily token limits.
 - Generated code runs in a locked-down subprocess (timeout, memory and file limits, empty environment). This is a guard, not a hard sandbox.
+- The last 40 large-model HumanEval problems were run under a different Groq account, because the free-tier quota was shared with another project. The model and prices are identical.
